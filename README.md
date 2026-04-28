@@ -106,22 +106,22 @@ Presenter - презентер содержит основную логику п
 #### Интерфейс IProduct
 typescript
 interface IProduct {
-  id: string;
-  description: string;
-  image: string;
-  title: string;
-  category: string;
-  price: number | null;
+  id: string; - уникальный идентификатор
+  description: string; - описание
+  image: string; - путь к изображению
+  title: string; - название
+  category: string; - категория
+  price: number | null; - цена
 }
 Назначение: Описывает структуру товара в каталоге. Содержит уникальный идентификатор, название, описание, путь к изображению, категорию и цену (может быть null, если товар недоступен для покупки).
 
 #### Интерфейс IBuyer
 typescript
 interface IBuyer {
-  payment: TPayment;
-  email: string;
-  phone: string;
-  address: string;
+  payment: TPayment; - способ оплаты
+  email: string; - email
+  phone: string; - номер телефона
+  address: string; - адрес доставки
 }
 Назначение: Описывает данные покупателя, необходимые для оформления заказа. Содержит способ оплаты, email, номер телефона и адрес доставки.
 

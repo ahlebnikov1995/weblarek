@@ -16,7 +16,7 @@ export interface IProduct {
 }
 
 export interface IBuyer {
-  payment: TPayment;
+  payment: TPayment | null;
   email: string;
   phone: string;
   address: string;
@@ -28,11 +28,7 @@ export interface IProductsResponse {
 }
 
 // Запрос на создание заказа
-export interface IOrderRequest {
-    payment: string
-    email: string;
-    phone: string;
-    address: string;
+export interface IOrderRequest extends IBuyer {
     total: number;
     items: string[];  
 }

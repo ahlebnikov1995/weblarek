@@ -22,13 +22,13 @@ export class Buyer {
     this.address = address;
   }
 
-  getData(): Partial<IBuyer> {
-    const data: Partial<IBuyer> = {};
-    if (this.payment) data.payment = this.payment;
-    if (this.email) data.email = this.email;
-    if (this.phone) data.phone = this.phone;
-    if (this.address) data.address = this.address;
-    return data;
+  getData(): IBuyer {
+    return {
+     payment: this.payment,
+     email: this.email,
+     phone: this.phone,
+     address: this.address
+    }
   }
 
   clear(): void {
@@ -38,8 +38,8 @@ export class Buyer {
     this.address = '';
   }
 
-  validate(): Record<string, string> | null {
-    const errors: Record<string, string> = {};
+  validate(): Partial<Record<keyof IBuyer, string>> | null {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this.payment) errors.payment = 'Не выбран вид оплаты';
     if (!this.email.trim()) errors.email = 'Укажите email';
