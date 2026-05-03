@@ -62,12 +62,22 @@ console.log('-----API-----');
 const api = new Api(API_URL); 
 const apiService = new ApiService(api);
 
-try{
-    const products = await apiService.getProducts();
+    async function init() {
 
-    productsModel.setProducts(products.items);
+        try{
+            const products = await apiService.getProducts();
+            productsModel.setProducts(products.items);
 
-    console.log('Массив товаров из каталога: ', productsModel.getProducts());
+            console.log('Массив товаров из каталога: ', productsModel.getProducts());
+
+        } catch(err) {
+            console.log(err);
+        }        
+    }
+
+    init(); 
+
+    
 
     console.log('Конкретный товар: ', productsModel.getProductById("854cef69-976d-4c2a-a18c-2aa45046c390"));
 
@@ -77,9 +87,9 @@ try{
 
 
 
-    cartModel.addItem(products.items[0]);
-    cartModel.addItem(products.items[1]);
-    cartModel.addItem(products.items[2]);
+    cartModel.addItem(productsModel.getProducts()[0]);
+    cartModel.addItem(productsModel.getProducts()[0]);
+    cartModel.addItem(productsModel.getProducts()[0]);
 
     console.log('В корзину добавлены 3 товара, содержимое корзины: ', cartModel.getItems());
 
@@ -94,6 +104,3 @@ try{
     cartModel.clear();
 
     console.log('корзина очищена, содержимое корзины: ', cartModel.getItems());
-} catch(err) {
-    console.log(err);
-}

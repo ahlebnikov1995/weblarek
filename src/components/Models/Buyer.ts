@@ -1,4 +1,5 @@
 import { IBuyer, TPayment } from '../../types';
+type Errors = Partial<Record<keyof IBuyer, string>>;
 
 export class Buyer {
   private payment: TPayment | null = null;
@@ -38,14 +39,14 @@ export class Buyer {
     this.address = '';
   }
 
-  validate(): Partial<Record<keyof IBuyer, string>> | null {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
+  validate(): Errors {
+    const errors: Errors = {};
 
     if (!this.payment) errors.payment = 'Не выбран вид оплаты';
     if (!this.email.trim()) errors.email = 'Укажите email';
     if (!this.phone.trim()) errors.phone = 'Укажите телефон';
     if (!this.address.trim()) errors.address = 'Укажите адрес';
 
-    return Object.keys(errors).length > 0 ? errors : null;
+    return errors;
   }
 }
