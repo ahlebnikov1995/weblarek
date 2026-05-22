@@ -30,7 +30,7 @@ export interface IProductsResponse {
 // Запрос на создание заказа
 export interface IOrderRequest extends IBuyer {
     total: number;
-    items: string[];  
+    items: IProduct[];  
 }
 
 export interface IOrderConfirmation {
