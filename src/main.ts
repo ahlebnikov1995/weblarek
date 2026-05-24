@@ -40,15 +40,11 @@ const appContainer = document.querySelector('.page') as HTMLElement;
 console.log("страница - ", appContainer);
 const headerContainer = appContainer.querySelector('.header') as HTMLElement;
 const galleryContainer = appContainer.querySelector('.gallery') as HTMLElement;
-const ModalContainer = appContainer.querySelector('.modal__container') as HTMLElement;
-console.log("модалка - ", ModalContainer);
 
-const template_basket = document.querySelector('#basket') as HTMLTemplateElement;
-const basketModalContainer = template_basket?.content.querySelector('.basket') as HTMLElement;
-console.log("элемент корзины - ", basketModalContainer);
-const template_card_full = document.querySelector('#card-preview') as HTMLTemplateElement;
-const productModalContainer = template_card_full?.content.querySelector('.card_full') as HTMLElement;
-console.log("элемент товара - ", productModalContainer);
+const basketTemplate = document.querySelector('#basket') as HTMLTemplateElement;
+const basketElement = basketTemplate.content.cloneNode(true) as DocumentFragment;
+const basketContainer = basketElement.firstElementChild as HTMLElement;
+
 
 const template_order = document.querySelector('#order') as HTMLTemplateElement;
 const orderFormContainer = template_order?.content.querySelector('.form') as HTMLElement;
@@ -65,13 +61,15 @@ const header = new Header(headerContainer, () => {
 
 const gallery = new Gallery(galleryContainer);
 
-const basket = new Basket(basketModalContainer, () => {
-    document.dispatchEvent(new CustomEvent('checkoutClicked'));
+const basket = new Basket(basketContainer, () => {
+        document.dispatchEvent(new CustomEvent('checkoutClicked'));
 });
 
-const basketModal = new Modal(ModalContainer, () => basketModal.close(), basketModalContainer);
 
-const productModal = new Modal(ModalContainer, () => productModal.close(),productModalContainer);
+const modalContainer = document.querySelector('#modal-container') as HTMLElement;
+
+const modal = new Modal(modalContainer, () => modal.close());
+
 
 const orderForm = new OrderForm(
     orderFormContainer,
@@ -107,7 +105,7 @@ const contactsForm = new ContactsForm(
 productCatalog.on('productsChanged', (products: IProduct[]) => {
     const cardElements = products.map(product => {
         // Создание DOM-элемента карточки из шаблона (шаблон должен быть в index.html)
-        const cardTemplate = document.querySelector('.card__template') as HTMLTemplateElement;
+        const cardTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
         const cardElement = cardTemplate.content.cloneNode(true) as DocumentFragment;
         const cardContainer = cardElement.firstElementChild as HTMLElement;
 
@@ -122,6 +120,7 @@ productCatalog.on('productsChanged', (products: IProduct[]) => {
         card.category = product.category;
         card.image = product.image;
         card.id = product.id;
+        console.log(card.image);
 
         // Добавление отдельного обработчика для кнопки "Купить"
         const buyButton = cardContainer.querySelector('.card__button');
@@ -140,7 +139,7 @@ productCatalog.on('productsChanged', (products: IProduct[]) => {
 // Обработчик 2: Изменение выбранного товара (для просмотра деталей)
 productCatalog.on('selectedProductChanged', (product: IProduct) => {
     // Создание карточки для модального окна предпросмотра
-    const previewTemplate = document.querySelector('.preview__template') as HTMLTemplateElement;
+    const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
     const previewElement = previewTemplate.content.cloneNode(true) as DocumentFragment;
     const previewContainer = previewElement.firstElementChild as HTMLElement;
 
@@ -157,8 +156,8 @@ productCatalog.on('selectedProductChanged', (product: IProduct) => {
     previewCard.id = product.id;
 
     // Вставка карточки в модальное окно и его открытие
-    productModal.content = previewContainer;
-    productModal.open();
+    modal.content = previewContainer;
+    modal.open();
 });
 
 // Обработчик 3: Изменение состояния корзины
@@ -167,9 +166,12 @@ cart.on('cartChanged', () => {
     const total = cart.getTotalPrice();
     const count = cart.getItemCount();
 
+    header.count = count;
+
     // Обновление списка товаров в виджете корзины
-    const basketCardElements = items.map(item => {
-        const basketCardTemplate = document.querySelector('.basket-card__template') as HTMLTemplateElement;
+    const basketCardElements = items.map((item, index) => {
+        // Используем правильный ID вашего шаблона для корзины (#card-basket)
+        const basketCardTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
         const basketCardElement = basketCardTemplate.content.cloneNode(true) as DocumentFragment;
         const cardContainer = basketCardElement.firstElementChild as HTMLElement;
 
@@ -177,8 +179,12 @@ cart.on('cartChanged', () => {
         basketCard.title = item.title;
         basketCard.price = item.price;
 
-        // Добавление кнопки удаления товара из корзины
-        const removeButton = cardContainer.querySelector('.basket-card__button') as HTMLButtonElement;
+        // Выводим порядковый номер
+        const indexSpan = cardContainer.querySelector('.basket__item-index') as HTMLElement;
+        if (indexSpan) indexSpan.textContent = String(index + 1);
+
+        // Добавление кнопки удаления товара из корзины (используем класс из вашей верстки)
+        const removeButton = cardContainer.querySelector('.basket__item-delete') as HTMLButtonElement;
         if (removeButton) {
             removeButton.addEventListener('click', () => {
                 document.dispatchEvent(new CustomEvent('removeFromCartClicked', { detail: { productId: item.id } }));
@@ -187,6 +193,7 @@ cart.on('cartChanged', () => {
         return cardContainer;
     });
 
+    // Наполняем глобальный объект basket, который мы создали на Шаге 1
     basket.items = basketCardElements;
     basket.total = total;
 
@@ -196,6 +203,7 @@ cart.on('cartChanged', () => {
     // Побочный эффект: автосохранение корзины в localStorage
     localStorage.setItem('cart', JSON.stringify(items));
 });
+
 
 // Обработчик 4: Изменение данных покупателя
 buyer.on('buyerDataChanged', () => {
@@ -252,7 +260,9 @@ document.addEventListener('removeFromCartClicked', (event: Event) => {
 
 // Обработчик 8: Открытие модального окна корзины
 document.addEventListener('openCartClicked', () => {
-    basketModal.open();
+
+    modal.content = basketContainer; 
+    modal.open();
 });
 
 // Обработчик 9: Начало оформления заказа (кнопка в корзине)
@@ -261,7 +271,7 @@ document.addEventListener('checkoutClicked', () => {
         showNotification('Корзина пуста', 'error');
         return;
     }
-    basketModal.close();
+    modal.close();
     orderFormContainer.classList.add('form_active'); // Показ первой формы
 });
 
@@ -304,7 +314,7 @@ document.addEventListener('payOrderClicked', async () => {
         cart.clear(); // Вызовет событие 'cartChanged'
         buyer.clear(); // Вызовет событие 'buyerDataChanged'
         contactsFormContainer.classList.remove('form_active');
-        productModal.close();
+        modal.close();
 
     } catch (error) {
         console.error('Ошибка оформления заказа:', error);
@@ -362,6 +372,7 @@ async function initApp() {
        console.log("зашли в инит");
        const products = await apiService.getProducts();
        console.log("продукты - ", products);
+       console.log("каталог - ", productCatalog);
        productCatalog.setProducts(products.items);
     } catch (error) {
         console.error('Ошибка инициализации приложения:', error);

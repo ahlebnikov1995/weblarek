@@ -4,9 +4,12 @@ export class Modal extends Component<unknown> {
   protected _content: HTMLElement;
   protected _closeButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement, onClose: () => void, content:HTMLElement) {
+  // Оставляем три аргумента, чтобы не сломать типы, но делаем content необязательным [?]
+  constructor(container: HTMLElement, onClose: () => void, content?: HTMLElement) {
     super(container);
-    this._content = content;
+    
+    // ВАЖНО: Ищем зону контента ИМЕННО внутри самой модалки (внутри container)
+    this._content = container.querySelector('.modal__content') as HTMLElement;
     this._closeButton = container.querySelector('.modal__close') as HTMLButtonElement;
 
     this._closeButton.addEventListener('click', onClose);
@@ -15,6 +18,7 @@ export class Modal extends Component<unknown> {
     });
   }
 
+  // Этот сеттер теперь будет чисто и безопасно вставлять любой HTML внутрь <div class="modal__content">
   set content(value: HTMLElement) {
     this._content.replaceChildren(value);
   }
@@ -25,6 +29,6 @@ export class Modal extends Component<unknown> {
 
   close() {
     this.container.classList.remove('modal_active');
-    this._content.replaceChildren();
+    this._content.replaceChildren(); // Очищаем при закрытии, чтобы не оставалось старых данных
   }
 }

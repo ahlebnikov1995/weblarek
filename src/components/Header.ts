@@ -13,7 +13,7 @@ export class Header extends Component<IHeaderData> {
   constructor(container: HTMLElement, onBasketClick: () => void) {
     super(container);
     this._title = container.querySelector('.header__title') as HTMLElement;
-    this._count = container.querySelector('.header__counter') as HTMLElement;
+    this._count = container.querySelector('.header__basket-counter') as HTMLElement;
     this._basketButton = container.querySelector('.header__basket') as HTMLButtonElement;
 
     this._basketButton.addEventListener('click', onBasketClick);
