@@ -46,11 +46,17 @@ const basketElement = basketTemplate.content.cloneNode(true) as DocumentFragment
 const basketContainer = basketElement.firstElementChild as HTMLElement;
 
 
+
 const template_order = document.querySelector('#order') as HTMLTemplateElement;
-const orderFormContainer = template_order?.content.querySelector('.form') as HTMLElement;
+const orderElement = template_order.content.cloneNode(true) as DocumentFragment;
+const orderFormContainer = orderElement.querySelector('.form') as HTMLElement;
+
 
 const template_contacts = document.querySelector('#contacts') as HTMLTemplateElement;
-const contactsFormContainer = template_contacts?.content.querySelector('.form') as HTMLElement;
+const contactsElement = template_contacts.content.cloneNode(true) as DocumentFragment;
+const contactsFormContainer = contactsElement.querySelector('.form') as HTMLElement;
+
+
 
 
 // 4. Создание экземпляров компонентов представления.
@@ -122,14 +128,6 @@ productCatalog.on('productsChanged', (products: IProduct[]) => {
         card.id = product.id;
         console.log(card.image);
 
-        // Добавление отдельного обработчика для кнопки "Купить"
-        const buyButton = cardContainer.querySelector('.card__button');
-        if (buyButton) {
-            buyButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Чтобы не сработало событие выбора карточки
-                document.dispatchEvent(new CustomEvent('addToCartClicked', { detail: { productId: product.id } }));
-            });
-        }
         return cardContainer;
     });
     // Команда компоненту Gallery отрендерить все созданные карточки
@@ -145,6 +143,7 @@ productCatalog.on('selectedProductChanged', (product: IProduct) => {
 
     const previewCard = new PreviewCard(previewContainer, () => {
         document.dispatchEvent(new CustomEvent('addToCartClicked', { detail: { productId: product.id } }));
+        previewCard.buttonText = "уже в корзине";
     });
 
     previewCard.title = product.title;
@@ -242,10 +241,7 @@ document.addEventListener('addToCartClicked', (event: Event) => {
     const product = productCatalog.getProductById(customEvent.detail.productId);
     if (product && !cart.hasItem(product.id)) {
         cart.addItem(product); // Вызовет событие 'cartChanged'
-        showNotification(`Товар «${product.title}» добавлен в корзину`, 'success');
-    } else if (product) {
-        showNotification(`Товар «${product.title}» уже в корзине`, 'info');
-    }
+    } 
 });
 
 // Обработчик 7: Удаление товара из корзины
@@ -254,7 +250,6 @@ document.addEventListener('removeFromCartClicked', (event: Event) => {
     const product = productCatalog.getProductById(customEvent.detail.productId);
     if (product) {
         cart.removeItem(product); // Вызовет событие 'cartChanged'
-        showNotification(`Товар «${product.title}» удален из корзины`, 'info');
     }
 });
 
@@ -268,29 +263,22 @@ document.addEventListener('openCartClicked', () => {
 // Обработчик 9: Начало оформления заказа (кнопка в корзине)
 document.addEventListener('checkoutClicked', () => {
     if (cart.getItemCount() === 0) {
-        showNotification('Корзина пуста', 'error');
         return;
     }
-    modal.close();
-    orderFormContainer.classList.add('form_active'); // Показ первой формы
+    modal.content = orderFormContainer; 
 });
 
 // Обработчик 10: Переход от формы заказа к форме контактов
 document.addEventListener('proceedToFormClicked', () => {
-    const errors = buyer.validate(); // Валидация адреса и способа оплаты
-    if (Object.keys(errors).length === 0) {
-        orderFormContainer.classList.remove('form_active');
-        contactsFormContainer.classList.add('form_active'); // Показ второй формы
-    } else {
-        showNotification('Заполните все поля в форме заказа', 'error');
-    }
+    modal.content = contactsFormContainer; 
+
 });
 
 // Обработчик 11: Завершение оформления заказа (отправка на сервер)
 document.addEventListener('payOrderClicked', async () => {
     const errors = buyer.validate();
+    console.log(errors);
     if (Object.keys(errors).length > 0) {
-        showNotification('Исправьте ошибки в форме', 'error');
         return;
     }
 
@@ -308,7 +296,6 @@ document.addEventListener('payOrderClicked', async () => {
     try {
         // Использование ApiService для отправки заказа на сервер
         const confirmation = await apiService.createOrder(orderData);
-        showNotification('Заказ успешно оформлен!', 'success');
 
         // Сброс состояния приложения после успешного заказа
         cart.clear(); // Вызовет событие 'cartChanged'
@@ -317,8 +304,8 @@ document.addEventListener('payOrderClicked', async () => {
         modal.close();
 
     } catch (error) {
+        //получил ошибку 400, не знаю где посмотреть какой объект формировать
         console.error('Ошибка оформления заказа:', error);
-        showNotification('Не удалось оформить заказ. Попробуйте позже.', 'error');
     }
 });
 
@@ -345,25 +332,7 @@ document.addEventListener('formDataChanged', (event: Event) => {
     // Методы модели Buyer вызовут событие 'buyerDataChanged'
 });
 
-
-/**
- * Утилита для показа временных уведомлений пользователю.
- * @param message Текст сообщения
- * @param type Тип уведомления, влияющий на его стиль
- */
-function showNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification_${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-
-/**
+/*
  * Основная функция инициализации, выполняемая после полной загрузки DOM.
  * Загружает товары с сервера и восстанавливает состояние корзины.
  */
@@ -376,7 +345,6 @@ async function initApp() {
        productCatalog.setProducts(products.items);
     } catch (error) {
         console.error('Ошибка инициализации приложения:', error);
-        showNotification('Не удалось загрузить данные каталога', 'error');
     }
 }
 
