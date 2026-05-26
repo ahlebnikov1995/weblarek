@@ -2,15 +2,6 @@ import { Card } from './Card';
 import {CDN_URL} from '../utils/constants';
 import {categoryMap} from '../utils/constants';
 
-export interface IPreviewCardData {
-  title: string;
-  price: number | null;
-  category: string;
-  image: string;
-  description: string;
-  id: string;
-  buttonText: string;
-}
 
 export class PreviewCard extends Card {
   protected _category: HTMLElement;
@@ -27,10 +18,7 @@ export class PreviewCard extends Card {
     this._button.addEventListener('click', onBuy);
   }
 
-  set id(value: string) {
-    this.container.dataset.id = value;
-  }
-
+ 
   set category(value: string) {
     const targetClass = categoryMap[value as keyof typeof categoryMap];
      this._category.className = 'card__category'; 

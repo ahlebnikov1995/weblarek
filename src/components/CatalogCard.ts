@@ -2,13 +2,6 @@ import { Card } from './Card';
 import {CDN_URL} from '../utils/constants';
 import {categoryMap} from '../utils/constants';
 
-export interface ICatalogCardData {
-  title: string;
-  price: number | null;
-  category: string;
-  image: string;
-  id: string;
-}
 
 export class CatalogCard extends Card {
   protected _category: HTMLElement;
@@ -19,10 +12,6 @@ export class CatalogCard extends Card {
     this._category = container.querySelector('.card__category') as HTMLElement;
     this._image = container.querySelector('.card__image') as HTMLImageElement;
     container.addEventListener('click', onClick);
-  }
-
-  set id(value: string) {
-    this.container.dataset.id = value;
   }
 
   set category(value: string) {
