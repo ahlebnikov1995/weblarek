@@ -64,7 +64,7 @@ const contactsFormContainer = contactsElement.querySelector('.form') as HTMLElem
 //    Колбэки в конструкторах немедленно генерируют события для презентера.
 
 // events.ts (или любой другой файл инициализации)
-export const eventEmitter = new EventEmitter();
+const eventEmitter = new EventEmitter();
 
 
 const header = new Header(headerContainer, () => {
@@ -165,7 +165,7 @@ productCatalog.on('selectedProductChanged', (product: IProduct) => {
     previewCard.buttonText = cart.hasItem(product.id) ? 'Уже в корзине' : 'В корзину';
 
     // Вставка карточки в модальное окно и его открытие
-    modal.content = previewContainer;
+    modal.content = previewCard.render();
     modal.open();
 });
 
@@ -218,6 +218,9 @@ buyer.on('buyerDataChanged', () => {
     // Управление активностью кнопок отправки форм на основе валидности
     orderForm.valid = !('address' in errors) && !('payment' in errors);
     contactsForm.valid = !('email' in errors) && !('phone' in errors);
+
+    orderForm.errors = [errors.address, errors.payment].filter(Boolean).join('; ')
+    contactsForm.errors = [errors.email, errors.phone].filter(Boolean).join('; ')
 });
 
 // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ОТ ПРЕДСТАВЛЕНИЙ ====================
